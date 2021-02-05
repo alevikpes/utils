@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# https://unix.stackexchange.com/questions/194582/turn-screen-off-when-inactive-for-time-period-in-rhel-and-debian
+# https://superuser.com/questions/267637/how-can-i-change-the-time-before-the-system-locks
+
+### Lock the screen ###
+
+gsettings set org.gnome.settings-daemon.plugins.power sleep-display-ac 180
+gsettings set org.gnome.settings-daemon.plugins.power sleep-display-battery 180
+gsettings set org.gnome.desktop.session idle-delay 180
+gsettings set org.gnome.desktop.screensaver idle-activation-enabled 'true'
+gsettings set org.gnome.desktop.screensaver lock-enabled 'true'
+gsettings set org.gnome.desktop.screensaver lock-delay 180

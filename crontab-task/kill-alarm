@@ -1,0 +1,4 @@
+#!/bin/bash
+
+pgrep -f siren.py | xargs kill -9
+python3 ${HOME}/projects/blinklib/turn_off.py

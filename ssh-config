@@ -1,0 +1,15 @@
+# First run this: git config --global user.useConfigOnly true
+# then follow this:
+# https://code.tutsplus.com/tutorials/quick-tip-how-to-work-with-github-and-multiple-accounts--net-22574
+
+#Default GitHub
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa
+
+# private github
+Host github-private
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa_private

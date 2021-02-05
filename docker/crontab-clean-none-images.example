@@ -1,0 +1,2 @@
+# clean <none> docker containers                                                
+0 10 * * * /path/to/clear-none-images > /dev/null 2>&1

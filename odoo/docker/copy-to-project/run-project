@@ -1,0 +1,36 @@
+#!/bin/bash
+
+prjimagename=
+prjcontname=
+dbcontname=
+if [[ $# == 3 ]]; then
+    prjimagename="${1}"
+    prjcontname="${2}"
+    dbcontname="${3}"
+else
+    echo "Usage:
+
+./run-project \\
+    <project image name> \\
+    <project container name> \\
+    <database container name>
+
+- <project image name> must be of an existing project image
+- <project container name> can be either a new name (creates new container)
+    or an existing one (updates existing container)
+- <database container name> can be either a new name (creates new container)
+    or an existing one (updates existing container)
+
+Exiting ..."
+    exit 1
+fi
+
+# these environment variables will be used by the `docker-compose.yml`
+# during execution
+echo "${dbcontname}"
+export PROJECT_IMAGE_NAME="${prjimagename}"
+export PROJECT_CONTAINER_NAME="${prjcontname}"
+export DB_CONTAINER_NAME="${dbcontname}"
+docker-compose up -d
+
+# `-d` - containers will be created and started detached

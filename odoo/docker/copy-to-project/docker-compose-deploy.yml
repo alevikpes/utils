@@ -1,0 +1,46 @@
+version: '3'
+
+# copy this file to your project root directory
+
+services:
+    db:
+        image: postgres:9.5
+        environment:
+            - POSTGRES_PASSWORD=odoo
+            - POSTGRES_USER=odoo
+            - POSTGRES_DB=postgres
+            - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - odoo-db-data:/var/lib/postgresql/data/pgdata
+        networks:
+            - dbnet
+    odoo:
+        image: $PROJECT_IMAGE_NAME
+        depends_on:
+            - db
+        ports:
+            # map 8069 port on the host to odoo container's 80 port
+            - "8069:8069"
+        volumes:
+            - odoo-data:/var/lib/odoo
+            - ./custom-addons:/app/custom-addons
+            - ./common-addons:/app/common-addons
+            - ./oca-addons:/app/oca-addons
+        deploy:
+            replicas: 1
+            resources:
+                limits:
+                    cpus: "0.1"
+                    memory: 250M
+            restart_policy:
+                condition: on-failure
+        networks:
+            - webnet
+
+networks:
+    webnet:
+    dbnet:
+
+volumes:
+    odoo-data:
+    odoo-db-data:

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# make this script executable by `chmod 774 pymod-version`
+# and creat a soft link to it in one of your PATH dirs:
+# `ln -s /full/path/to/the/script /full/path/to/the/link`
+# then you can run it from any place of your system
+
+# parse module name
+if [ $# -eq 0 ]; then
+    echo "The name of the python module is a required first argument."
+    exit 1
+fi
+
+module_name="$1"
+
+# check the version
+python -c "import pkg_resources; print(pkg_resources.get_distribution('${module_name}').version)"
+
+# exit
+exit 0

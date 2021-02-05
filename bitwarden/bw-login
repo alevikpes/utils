@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# A script to login to bw which saves the bw session key to env
+
+
+key=$(bw login --raw)
+# check if already logged in
+case "$key" in
+    *"You are already"* )
+        echo "$key"
+        exit 0
+        ;;
+esac
+
+export BW_SESSION="$key"
+echo "bw session saved: $BW_SESSION"

@@ -1,0 +1,55 @@
+# If this file is copied from anywhere, one thing must be set manually:
+# The "^M" symbol in the end of some strings, is not literly "^" and "M" symbols
+# - it is a special symbol, which is created by "Ctrl+v" and then "Enter".
+# When the config code is copied, it is necessary to recreate it, otherwise it
+# is copied literly and will not work.
+# This key combination only works in vim-like editors. In other editors it
+# may be different - ask Google for help.
+
+# In case of avoiding typing sudo password there are some solutions:
+#   - run the whole script as `sudo screen`;
+#   - use NOPASSWD directive of `sudoers` for a specific command, script or a
+#       directory, see: https://askubuntu.com/a/159009;
+
+shell -$SHELL
+autodetach on
+chdir
+defscrollback 50000
+vbell off
+startup_message off
+
+# To find the codes of the keys and key-combinations use `sudo showkey`.
+# Bind Alt+Left and Alt+Right to move to the previous and next screen windows
+bindkey ^[[1;3D prev
+bindkey ^[[1;3C next
+
+# Status line at the bottom.
+hardstatus alwayslastline '%{= w}[%{B}%H%{w}]%{=}[%{B}%l%{w}][%= %{= w}%-w%{+b r}(%{w}%n*%t%{r})%{-b r}%{w}%+w %=]%{w}[%{B}%Y-%m-%d %c:%s%{w}]'
+
+# From Stephen Shirley
+# Don't block command output if the terminal stops responding
+# (like if the ssh connection times out for example).
+nonblock on
+
+# Allow editors etc. to restore display on exit
+# rather than leaving existing text in place
+altscreen on
+
+# terminfo and termcap for nice 256 color terminal
+# allow bold colors - necessary for some reason
+attrcolor b ".I"
+# tell screen how to set colors. AB = background, AF=foreground
+#termcapinfo xterm-256color 'Co#256:AB=\E[48;5;%dm:AF=\E[38;5;%dm'
+
+## create a window with the back-end instance
+#screen -t 'screen1'
+## run command in the screen console
+#stuff 'cd /path/to/your/project'
+## run command in the screen console
+#stuff 'nanobox run python manage.py runserver 0.0.0.0:8080'
+#
+## create another window with a front-end instance
+#screen -t 'screen2'
+## run command in the screen console
+#stuff 'cd /path/ot/your/project'
+#stuff 'yarn start'

@@ -1,0 +1,58 @@
+version: '3.7'
+
+services:
+
+    mariadb:
+        container_name: mariadb
+        restart: unless-stopped
+        image: mariadb
+        volumes:
+            - ./db:/docker-entrypoint-initdb.d/
+            - dbdata:/var/lib/mariadb/data
+        env_file:
+            - ./environments/virtual.env
+        networks:
+            - db_nw
+
+    django-app:
+        container_name: django-app
+        restart: unless-stopped
+        build:
+            context: ./django-app
+            dockerfile: Dockerfile
+        image: django-app-image
+        volumes:
+            - ./django-app:/app
+        env_file:
+            - ./environments/virtual.env
+        networks:
+            - db_nw
+            - web_nw
+#        ports:
+#            - "8000:8000"
+        depends_on:
+            - mariadb
+
+# nginx container is used only locally, remove it on production
+    nginx:
+        container_name: nginx
+        restart: unless-stopped
+        image: nginx
+        ports:
+            - "8080:80"
+        volumes:
+            - ./nginx/app.conf:/etc/nginx/conf.d/app.conf
+        networks:
+            - web_nw
+        depends_on:
+            - django-app
+######
+
+volumes:
+    dbdata:
+
+networks:
+    db_nw:
+        driver: bridge
+    web_nw:
+        driver: bridge

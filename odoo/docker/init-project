@@ -1,0 +1,54 @@
+#!/bin/bash
+
+if [[ $# -lt 2 ]]; then
+    echo "Usage:
+
+./init-project \\
+    <project directory name> \\
+    <odoo enterprise branch> \\
+    <list of project directories (optional)>
+
+- <project directory name> will be used to create a project root directory.
+If exists, will be used for the rest of the process.
+- <odoo enterprise branch> must be the branch on the company's git server.
+The script will clone it to the project dir.
+- <list of project directories> - all other arguments will be used to
+create directories inside the project root.
+
+Exiting ..."
+    exit 1
+fi
+
+# get arguments
+project="${1}"
+enterprise="${2}"
+
+# create project dir
+mkdir "../${project}"
+echo "../${project} directory has been created in the parent directory"
+
+# copy required docker files
+cp copy-to-project/* "../${project}"
+cp copy-to-project/.dockerignore "../${project}"
+echo "Required files has been copied"
+
+# set permissions
+chmod 755 "../${project}/create-project-image" "../${project}/run-project" 
+echo "Permissions has been set"
+
+# clone enterprise version
+git clone git@github.com:path/to/your/enterprise.git \
+    "../${project}/enterprise" \
+    -b "${enterprise}" \
+    --depth 1 \
+    --single-branch
+echo "Odoo Enterprise has been cloned"
+
+# create optional dirs
+for i in "${@:3}"; do
+    mkdir "../${project}/${i}"
+    echo "${i} has been created"
+done
+
+echo "Your new project has been initiated"
+echo "You can now start preparing your Docker environment"

@@ -1,0 +1,102 @@
+before_script:
+  - nanobox login --username=$NANOBOX_USERNAME --password=$NANOBOX_PASSWORD
+
+stages:
+  - test
+  - deploy
+
+flake 8:
+  stage: test
+  tags:
+    - nanobox
+  script:
+    - flake8
+  when: manual
+
+unit tests postgresql:
+  stage: test
+  tags:
+    - nanobox
+  script:
+    - ansible-playbook playbook.yml --extra-vars="remote_alias=local"
+    - nanobox run python manage.py migrate
+    - nanobox run coverage run --source='.' manage.py test --parallel=2 --noinput
+    - nanobox run coverage report
+  retry: 2
+  when: manual
+
+# GitLab CI uses the process exit code to determine if a job passes or fails:
+# https://stackoverflow.com/a/42377990
+#e2e tests:
+#  stage: test
+#  tags:
+#    - nanobox
+#  before_script:
+#    # start CRR and CS local instances
+#    - python3 end_to_end_testing/manage_tests.py create ~/projects/instance1/ ~/projects/instance2/
+#  script:
+#    - nanobox run python manage.py endtoendtests <username> <password> <cs base url>
+#  after_script:
+#    # remove testing instances
+#    - python3 end_to_end_testing/manage_tests.py destroy ~/projects/instance1/ ~/projects/instance2/
+#  when: manual
+
+.provision_environment: &provision_environment
+  before_script:
+    # replace `server_name` with the env name in nginx.conf
+    - /bin/sed -i -e 's/server_name/'$CI_ENVIRONMENT_NAME'\.domain\.nl/g' etc/nginx.conf
+    - nanobox remote add $CI_ENVIRONMENT_NAME
+    - nanobox evar add $CI_ENVIRONMENT_NAME RAVEN_URL=$RAVEN_URL
+    - nanobox evar add $CI_ENVIRONMENT_NAME PAPERTRAIL_HOST=$PAPERTRAIL_HOST
+    - nanobox evar add $CI_ENVIRONMENT_NAME PAPERTRAIL_PORT=$PAPERTRAIL_PORT
+    - ansible-playbook playbook.yml --extra-vars="remote_alias=$CI_ENVIRONMENT_NAME"
+  tags:
+    - nanobox
+
+.deploy_template: &deploy_definition
+  <<: *provision_environment
+  stage: deploy
+  tags:
+    - nanobox
+  script:
+    - nanobox deploy $CI_ENVIRONMENT_NAME
+
+.deploy_template: &deploy_definition_with_aws
+  <<: *provision_environment
+  stage: deploy
+  tags:
+    - nanobox
+  script:
+    - nanobox evar add $CI_ENVIRONMENT_NAME AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+    - nanobox evar add $CI_ENVIRONMENT_NAME AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
+    - nanobox evar add $CI_ENVIRONMENT_NAME AWS_S3_BACKUP_BUCKET=$AWS_S3_BACKUP_BUCKET
+    - nanobox evar add $CI_ENVIRONMENT_NAME AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - nanobox deploy $CI_ENVIRONMENT_NAME
+
+deploy to staging-crr:
+  <<: *deploy_definition
+  environment:
+    name: staging
+    url: https://staging.domain.nl
+  when: manual
+  retry: 2
+
+deploy to vtti-ett-acc-crr:
+  <<: *deploy_definition
+  environment:
+    name: acceptance
+    url: https://acceptance.domain.nl
+  when: manual
+  retry: 2
+  only:
+    - /^[0-9]+\.[0-9]+\.[0-9]+$/
+
+deploy to vtti-ett-prod-crr:
+  <<: *deploy_definition_with_aws
+  environment:
+    name: production
+    url: https://production.domain.nl
+  when: manual
+  retry: 2
+  only:
+    - /^[0-9]+\.[0-9]+\.[0-9]+$/

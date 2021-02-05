@@ -1,0 +1,7 @@
+*.swp
+*.vim
+*.tmp
+*.temp
+tmp
+temp
+__pycache__

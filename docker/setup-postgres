@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# This script allows to setup Postgres databases from the existing dumps
+
+echo "Getting environment variables ..."
+guesthome=$(docker exec postgres printenv HOME)
+psuser=$(docker exec postgres printenv POSTGRES_USER)
+pspass=$(docker exec postgres printenv POSTGRES_PASSWORD)
+
+echo "Generating pgpass file in the container ..."
+docker exec postgres \
+bash -c 'touch "${HOME}/.pgpass" && chmod 0600 "${HOME}/.pgpass"'
+
+# add postgres credentials to the `pgpass` file
+# the input arguments must be environment variable
+# containing the database name, i.e. `MYDB1_ENV_VAR=mydb1`
+function append_pgpass() {
+    exestr=$(echo "echo \"postgres:5432:\${${1}}:${psuser}:${pspass}\" >> \"${guesthome}/.pgpass\"")
+    echo "${exestr}"
+    docker exec postgres bash -c "${exestr}"
+}
+
+function fillin_db() {
+    exestr=$(echo "psql ${1} -U ${psuser} < /db-dumps/${1}.sql")
+    # remove `-d` to see the postgres log
+    docker exec -d postgres bash -c "${exestr}"
+}
+
+for db in 'MYDB1_ENV_VAR' 'MYDB2_ENV_VAR' 'MYDB3_ENV_VAR' 'MYDB4_ENV_VAR' ; do
+    echo "Appending ${db} to pgpass ..."
+    append_pgpass ${db}
+done
+
+for db in "mydb1" "mydb2" "mydb3" "mydb4"; do
+    echo "Creating ${db} ..."
+    docker exec postgres createdb -U "${psuser}" "${db}"
+    echo "Filling in ${db} ..."
+    fillin_db ${db}
+done
+
+echo "Finished"

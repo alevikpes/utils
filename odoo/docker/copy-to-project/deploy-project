@@ -1,0 +1,32 @@
+#!/bin/bash
+
+prjimagename=
+stackname=
+if [[ $# == 2 ]]; then
+    prjimagename="${1}"
+    stackname="${2}"
+else
+    echo "Usage:
+
+./run-project \\
+    <project image name> \\
+    <project stack name> \\
+
+- <project image name> must be of an existing project image
+- <project stack name> can be either a new name (creates new)
+    or an existing one (updates existing)
+
+Exiting ..."
+    exit 1
+fi
+
+# initiate a swarm manager node
+docker swarm init --advertise-addr 192.43.210.172
+
+# these environment variables will be used by the `docker-compose.yml`
+# during execution
+export PROJECT_IMAGE_NAME="${prjimagename}"
+export STACK_NAME="${stackname}"
+
+# start a deployment stack
+docker stack deploy -c docker-compose-deploy.yml "${stackname}"

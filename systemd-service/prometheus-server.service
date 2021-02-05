@@ -1,0 +1,11 @@
+[Unit]
+Description=prometheus-server
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/bin/bash /usr/local/bin/prometheus-serverd start
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

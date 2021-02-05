@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "Usage:
+./create-project-image \
+    <existing custom odoo image name> \
+    <your desired project image name>
+Exiting ..."
+    exit 1
+fi
+
+odooimgname="${1}"
+projimgname="${2}"
+docker build \
+    --no-cache \
+    -t ${projimgname} \
+    --build-arg custom_image=${odooimgname} \
+    .
+
+# `-q` - execute quietly
+# `--no-cache` - will be recreated even if the image already exists
+# `-t "<project tag/name>"` - desired image tag/name
+# `--build-arg <key>=<value>` - set value for a variable <key> in the
+#                               Dockerfile
+# `.` - path to the dir with a Dockerfile (current dir in this case)

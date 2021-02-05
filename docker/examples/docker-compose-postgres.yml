@@ -1,0 +1,62 @@
+version: '3.7'
+
+services:
+
+    postgres:
+        container_name: app-postgres
+        restart: unless-stopped
+        image: postgres
+        volumes:
+            - db-data:/var/lib/postgresql/data/pgdata
+#        env_file:
+#            - ./environments/local.env
+# the loading env vars from the `env_file` does not always work,
+# then use the explicit `environment` declaration:
+        environment:
+            POSTGRES_DB: appdb
+            POSTGRES_PASSWORD: dbpass
+            POSTGRES_USER: dbuser
+            PGDATA: /var/lib/postgresql/data/pgdata
+        networks:
+            - db_nw
+
+    app:
+        container_name: app
+        restart: unless-stopped
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: app-image
+        volumes:
+            - ./src:/app
+        env_file:
+            - ./environments/local.env
+        networks:
+            - db_nw
+            - web_nw
+        ports:
+            - "8880:8880"
+        depends_on:
+            - fffa-postgres
+
+    app-nginx:
+        container_name: app-nginx
+        restart: unless-stopped
+        image: nginx
+        ports:
+            - "8080:80"
+        volumes:
+            - ./nginx/local.conf:/etc/nginx/conf.d/app.conf
+        networks:
+            - web_nw
+        depends_on:
+            - app
+
+volumes:
+    db-data:
+
+networks:
+    db_nw:
+        driver: bridge
+    web_nw:
+        driver: bridge

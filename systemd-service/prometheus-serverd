@@ -1,0 +1,34 @@
+#!/bin/bash 
+ 
+function d_start() {
+    prometheus --config.file=/usr/local/lib/prometheus/config 1>&- 2>&- &
+    echo "Prometheus-server started"
+}
+ 
+# generally, stopping is not required, since
+# systemd stops the service by itself
+function d_stop() { 
+    kill -9 $(pidof prometheus)
+    echo "Prometheus-server stopped"
+}
+ 
+# Management instructions of the service
+case "$1" in
+    start)
+        d_start
+        ;; 
+    stop)
+        d_stop
+        ;; 
+    reload)
+        d_stop
+        sleep 1
+        d_start
+        ;; 
+    *)
+        echo "Usage: $0 {start | stop | reload}"
+        exit 1 
+        ;; 
+esac
+
+exit 0

@@ -1,0 +1,34 @@
+version: '3'
+
+# copy this file to your project root directory
+
+services:
+    db:
+        container_name: $DB_CONTAINER_NAME
+        image: postgres:9.5
+        environment:
+            - POSTGRES_PASSWORD=odoo
+            - POSTGRES_USER=odoo
+            - POSTGRES_DB=postgres
+            - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - odoo-db-data:/var/lib/postgresql/data/pgdata
+    odoo:
+        container_name: $PROJECT_CONTAINER_NAME
+        image: $PROJECT_IMAGE_NAME
+        restart: unless-stopped
+        depends_on:
+            - db
+        ports:
+            - "8069:8069"
+        volumes:
+            - odoo-data:/var/lib/odoo
+              #- odoo-data-dir:/app/odoo-data-dir
+            - ./custom-addons:/app/custom-addons
+            - ./common-addons:/app/common-addons
+            - ./oca-addons:/app/oca-addons
+
+volumes:
+    odoo-data:
+        #odoo-data-dir:
+    odoo-db-data:

@@ -1,0 +1,75 @@
+#!/bin/bash
+
+## Run this file on the master branch and use `master` branch or a version tag
+## in the requirements.txt of the dependent app, when installing this module.
+
+### Parse CL arguments
+if [[ "$#" -eq 1 ]]; then
+    version="$1"
+elif [[ "$#" -eq 3 && "$2" -eq '-m' ]]; then
+    version="$1"
+    tagmsg="$3"
+else
+    echo "Usage: $0 <version> [-m <tag message>]. Exiting ..."
+    exit 2
+fi
+
+### Tag message
+# default tag message
+deftagmsg=''
+if [ -n "${tagmsg}" ]; then
+    deftagmsg=": ${tagmsg}"
+fi
+
+appname=my_app
+venvdir=${HOME}/${appname}
+
+
+### Remove previous versions
+echo "Removing previous versions ..."
+git rm -r --cached dist/* &>/dev/null
+rm -r dist/*
+
+
+### Set up packaging environment
+echo "Setting up virtual environment ..."
+
+# create python3 virtual environment
+python3 -m venv ${venvdir}
+. ${venvdir}/bin/activate
+
+# install required tools in the venv
+pip install --upgrade pip setuptools &>/dev/null
+
+
+### Create new package
+# update the package version with the supplied CL argument
+python version.py --version ${version}
+
+# create the package of the supplied version
+echo "Creating package version ${version} ..."
+python setup.py sdist --formats=gztar &>/dev/null
+
+
+### Cleaning up
+echo "Cleaning up ..."
+
+# exit and remove the python3 venv
+deactivate
+rm -r ${venvdir}
+
+echo "Version ${version} succefully created."
+
+
+### Commit updates and push
+echo "Updating repository ..."
+git add .
+git commit -m "Version ${version}${deftagmsg}." &>/dev/null
+
+#TODO: add option to tag only dev versions
+#git tag -af ${version}-dev develop -m "${deftagmsg}"
+
+git tag -af ${version} master -m "${deftagmsg}"
+git push --tags origin master &>/dev/null
+
+echo "Finished."
